@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.01")
+script_version("Ver.FH.02")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -30,7 +30,7 @@ local trstl1 = {['ph'] = 'ф',['Ph'] = 'Ф',['Ch'] = 'Ч',['ch'] = 'ч',['Th'] = 'Т'
 local date = os.date('%d.%m.%Y')
 local fd_helper, fd_find_fire, autoupdate_loaded, afk, start_sobes, enable_autoupdate, Update, sobes_start = false, false, false, false, false, true, nil, false
 local sobes, next_fire, time_fire, time_end = ',05,Пожарный департамент', 'появится после пожара', '00:00:00', '00:00:00'
-local give, lvl, UTC = 0, 0, 0
+local give, stats, lvl, UTC = 0, 0, 0, 0
 local img = ''
 local tlg_send = false
 local fire_place = ''
