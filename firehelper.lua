@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.02")
+script_version("Ver.FH.03")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
