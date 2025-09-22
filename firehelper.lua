@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.03")
+script_version("Ver.FH.04")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -99,7 +99,8 @@ function main()
     local check_client = assert(conn:execute("SELECT COUNT(*) AS 'cnt' FROM clients WHERE nick = '"..who_nick.."'"))
     local cnt_client = check_client:fetch({}, "a")
     if cnt_client['cnt'] == '0' then
-        assert(conn:execute("INSERT INTO clients (nick, tlg_id, firehelper) VALUES ('"..who_nick.."', '0', '1')"))
+        lastlogin = os.date('%d.%m.%Y %H:%M:%S')
+        assert(conn:execute("INSERT INTO clients (nick, tlg_id, firehelper, lastlogin) VALUES ('"..who_nick.."', '0', '1', '"..lastlogin.."')"))
         assert(conn:execute("INSERT INTO firehelp (nick, give, stats) VALUES ('"..who_nick.."', '0','0')"))
     else
         local client = assert(conn:execute("select c.nick, c.tlg_id, f.give, f.stats from clients c join firehelp f on c.nick = f.nick WHERE c.nick = '"..who_nick.."'"))
@@ -108,6 +109,9 @@ function main()
         give = row['give']
         stats = row['stats']
         if tlg_id ~= '0' then tlg_send = true end
+
+        lastlogin = os.date('%d.%m.%Y %H:%M:%S')
+        assert(conn:execute("UPDATE clients SET lastlogin = '"..lastlogin.."' WHERE nick = '"..who_nick.."'"))
     end
 
     sampAddChatMessage('', 0x7FFFD4)
