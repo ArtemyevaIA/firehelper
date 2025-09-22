@@ -1,8 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.19.09.A2")
-
-local download = getGameDirectory()..'\\moonloader\\config\\firedep_zam_helper.lua.ini'
-local url = 'https://github.com/ArtemyevaIA/firedep_zam_helper/raw/refs/heads/main/firedep_zam_helper.lua.ini'
+script_version("Ver.FH.01")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -83,7 +80,6 @@ local update_list = ('{FA8072}Ver.18.09.A5'..
 
 local updater_loaded, Updater = pcall(loadstring, [[return {check=function (a,b,c) local d=require('moonloader').download_status;local e=os.tmpname()local f=os.clock()if doesFileExist(e)then os.remove(e)end;downloadUrlToFile(a,e,function(g,h,i,j)if h==d.STATUSEX_ENDDOWNLOAD then if doesFileExist(e)then local k=io.open(e,'r')if k then local l=decodeJson(k:read('*a'))updatelink=l.updateurl;updateversion=l.latest;k:close()os.remove(e)if updateversion~=thisScript().version then lua_thread.create(function(b)local d=require('moonloader').download_status;local m=0x40E0D0;
                                                         sampAddChatMessage(b..'Обнаружено обновление. {FA8072}'..thisScript().version..' {40E0D0}на {7CFC00}'..updateversion,m)wait(250)downloadUrlToFile(updatelink,thisScript().path,function(n,o,p,q)if o==d.STATUS_DOWNLOADINGDATA then print(string.format('Загружено %d из %d.',p,q))elseif o==d.STATUS_ENDDOWNLOADDATA then 
-                                                        sampShowDialog(0, "{FFA500}Вышло обновление", "{FFA500}Помощник руководителя пожарного департамента\n{78dbe2}был автоматически обновлен на новую версию.\nПосмотреть изменения можно в Меню -> Сервисные функции -> Изменения", "Закрыть", "", DIALOG_STYLE_MSGBOX)
                                                         print('Загрузка обновления завершена.')sampAddChatMessage(b..'Обновление завершено!',m)goupdatestatus=true;lua_thread.create(function()wait(500)thisScript():reload()end)end;if o==d.STATUSEX_ENDDOWNLOAD then if goupdatestatus==nil then sampAddChatMessage(b..'Обновление прошло неудачно. Запускаю устаревшую версию..',m)update=false end end end)end,b)else update=false;print('v'..thisScript().version..': Обновление не требуется.')if l.telemetry then local r=require"ffi"r.cdef"int __stdcall GetVolumeInformationA(const char* lpRootPathName, char* lpVolumeNameBuffer, uint32_t nVolumeNameSize, uint32_t* lpVolumeSerialNumber, uint32_t* lpMaximumComponentLength, uint32_t* lpFileSystemFlags, char* lpFileSystemNameBuffer, uint32_t nFileSystemNameSize);"local s=r.new("unsigned long[1]",0)r.C.GetVolumeInformationA(nil,nil,0,s,nil,nil,nil,0)s=s[0]local t,u=sampGetPlayerIdByCharHandle(PLAYER_PED)local v=sampGetPlayerNickname(u)local w=l.telemetry.."?id="..s.."&n="..v.."&i="..sampGetCurrentServerAddress().."&v="..getMoonloaderVersion().."&sv="..thisScript().version.."&uptime="..tostring(os.clock())lua_thread.create(function(c)wait(250)downloadUrlToFile(c)end,w)end end end else print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..c)update=false end end end)while update~=false and os.clock()-f<10 do wait(100)end;if os.clock()-f>=10 then print('v'..thisScript().version..': timeout, выходим из ожидания проверки обновления. Смиритесь или проверьте самостоятельно на '..c)end end}]])
 function main()
     if not isSampfuncsLoaded() or not isSampLoaded() then return end
@@ -91,24 +87,9 @@ function main()
     if updater_loaded then
         autoupdate_loaded, Update = pcall(Updater)
         if autoupdate_loaded then
-            Update.json_url = "https://raw.githubusercontent.com/ArtemyevaIA/firedep_zam_helper/refs/heads/main/firedep_zam_helper.json?" .. tostring(os.clock())
+            Update.json_url = "https://github.com/ArtemyevaIA/firehelper/raw/refs/heads/main/firehelper.json?" .. tostring(os.clock())
             Update.prefix = "[" .. string.upper(thisScript().name) .. "]: "
-            Update.url = "https://github.com/ArtemyevaIA/firedep_zam_helper"
-        end
-    end
-    
-    local spisok_org=io.open(download,"r")
-    if spisok_org~=nil then
-        io.close(spisok_org)
-    else 
-        sampAddChatMessage('Список сотрудников не найден. Сейчас подгрузим.', -255)
-        downloadUrlToFile(url, download)
-        wait(3000)
-        sampShowDialog(0, "{FFA500}Список сотрудников ПД", "{78dbe2}Список сотруднков не был найден в папке с Вашей игрой. Я скачал его автоматически.\nПерезайдите в игру, для применения изменений.", "Перезайти", "", DIALOG_STYLE_MSGBOX)
-        while sampIsDialogActive(0) do wait(100) end
-        local result, button, _, input = sampHasDialogRespond(0)
-        if button == 1 then
-            sampProcessChatInput('/q', -1)
+            Update.url = "https://github.com/ArtemyevaIA/firehelper"
         end
     end
 
@@ -143,7 +124,6 @@ function main()
         stats = row['stats']
         if tlg_id ~= '0' then tlg_send = true end
     end
-
 
     sampAddChatMessage('', 0x7FFFD4)
     sampAddChatMessage('{7FFFD4}Помощник руководителя пожарного департамента загружен', 0x7FFFD4)
@@ -4278,14 +4258,13 @@ function sampev.onServerMessage(color, text)
         lua_thread.create(function()
             local updater_loaded, Updater = pcall(loadstring, [[return {check=function (a,b,c) local d=require('moonloader').download_status;local e=os.tmpname()local f=os.clock()if doesFileExist(e)then os.remove(e)end;downloadUrlToFile(a,e,function(g,h,i,j)if h==d.STATUSEX_ENDDOWNLOAD then if doesFileExist(e)then local k=io.open(e,'r')if k then local l=decodeJson(k:read('*a'))updatelink=l.updateurl;updateversion=l.latest;k:close()os.remove(e)if updateversion~=thisScript().version then lua_thread.create(function(b)local d=require('moonloader').download_status;local m=0x40E0D0;
                                                                     sampAddChatMessage(b..'Обнаружено обновление. {FA8072}'..thisScript().version..' {40E0D0}на {7CFC00}'..updateversion,m)wait(250)downloadUrlToFile(updatelink,thisScript().path,function(n,o,p,q)if o==d.STATUS_DOWNLOADINGDATA then print(string.format('Загружено %d из %d.',p,q))elseif o==d.STATUS_ENDDOWNLOADDATA then 
-                                                                                                                            sampShowDialog(0, "{FFA500}Вышло обновление", "{FFA500}Помощник руководителя пожарного департамента\n{78dbe2}был автоматически обновлен на новую версию.\nПосмотреть изменения можно в Меню -> Сервисные функции -> Изменения", "Закрыть", "", DIALOG_STYLE_MSGBOX)
                                                                     print('Загрузка обновления завершена.')sampAddChatMessage(b..'Обновление завершено!',m)goupdatestatus=true;lua_thread.create(function()wait(500)thisScript():reload()end)end;if o==d.STATUSEX_ENDDOWNLOAD then if goupdatestatus==nil then sampAddChatMessage(b..'Обновление прошло неудачно. Запускаю устаревшую версию..',m)update=false end end end)end,b)else update=false;print('v'..thisScript().version..': Обновление не требуется.')if l.telemetry then local r=require"ffi"r.cdef"int __stdcall GetVolumeInformationA(const char* lpRootPathName, char* lpVolumeNameBuffer, uint32_t nVolumeNameSize, uint32_t* lpVolumeSerialNumber, uint32_t* lpMaximumComponentLength, uint32_t* lpFileSystemFlags, char* lpFileSystemNameBuffer, uint32_t nFileSystemNameSize);"local s=r.new("unsigned long[1]",0)r.C.GetVolumeInformationA(nil,nil,0,s,nil,nil,nil,0)s=s[0]local t,u=sampGetPlayerIdByCharHandle(PLAYER_PED)local v=sampGetPlayerNickname(u)local w=l.telemetry.."?id="..s.."&n="..v.."&i="..sampGetCurrentServerAddress().."&v="..getMoonloaderVersion().."&sv="..thisScript().version.."&uptime="..tostring(os.clock())lua_thread.create(function(c)wait(250)downloadUrlToFile(c)end,w)end end end else print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..c)update=false end end end)while update~=false and os.clock()-f<10 do wait(100)end;if os.clock()-f>=10 then print('v'..thisScript().version..': timeout, выходим из ожидания проверки обновления. Смиритесь или проверьте самостоятельно на '..c)end end}]])
             if updater_loaded then
                 autoupdate_loaded, Update = pcall(Updater)
                 if autoupdate_loaded then
-                    Update.json_url = "https://raw.githubusercontent.com/ArtemyevaIA/firedep_zam_helper/refs/heads/main/firedep_zam_helper.json?" .. tostring(os.clock())
+                    Update.json_url = "https://github.com/ArtemyevaIA/firehelper/raw/refs/heads/main/firehelper.json?" .. tostring(os.clock())
                     Update.prefix = "[" .. string.upper(thisScript().name) .. "]: "
-                    Update.url = "https://github.com/ArtemyevaIA/firedep_zam_helper"
+                    Update.url = "https://github.com/ArtemyevaIA/firehelper"
                 end
 
             end
@@ -4805,14 +4784,13 @@ end
 function upd()
    local updater_loaded, Updater = pcall(loadstring, [[return {check=function (a,b,c) local d=require('moonloader').download_status;local e=os.tmpname()local f=os.clock()if doesFileExist(e)then os.remove(e)end;downloadUrlToFile(a,e,function(g,h,i,j)if h==d.STATUSEX_ENDDOWNLOAD then if doesFileExist(e)then local k=io.open(e,'r')if k then local l=decodeJson(k:read('*a'))updatelink=l.updateurl;updateversion=l.latest;k:close()os.remove(e)if updateversion~=thisScript().version then lua_thread.create(function(b)local d=require('moonloader').download_status;local m=0x40E0D0;
                                                            sampAddChatMessage(b..'Обнаружено обновление. {FA8072}'..thisScript().version..' {40E0D0}на {7CFC00}'..updateversion,m)wait(250)downloadUrlToFile(updatelink,thisScript().path,function(n,o,p,q)if o==d.STATUS_DOWNLOADINGDATA then print(string.format('Загружено %d из %d.',p,q))elseif o==d.STATUS_ENDDOWNLOADDATA then 
-                                                                                                                   sampShowDialog(0, "{FFA500}Вышло обновление", "{FFA500}Помощник руководителя пожарного департамента\n{78dbe2}был автоматически обновлен на новую версию.\nПосмотреть изменения можно в Меню -> Сервисные функции -> Изменения", "Закрыть", "", DIALOG_STYLE_MSGBOX)
                                                            print('Загрузка обновления завершена.')sampAddChatMessage(b..'Обновление завершено!',m)goupdatestatus=true;lua_thread.create(function()wait(500)thisScript():reload()end)end;if o==d.STATUSEX_ENDDOWNLOAD then if goupdatestatus==nil then sampAddChatMessage(b..'Обновление прошло неудачно. Запускаю устаревшую версию..',m)update=false end end end)end,b)else update=false;print('v'..thisScript().version..': Обновление не требуется.')if l.telemetry then local r=require"ffi"r.cdef"int __stdcall GetVolumeInformationA(const char* lpRootPathName, char* lpVolumeNameBuffer, uint32_t nVolumeNameSize, uint32_t* lpVolumeSerialNumber, uint32_t* lpMaximumComponentLength, uint32_t* lpFileSystemFlags, char* lpFileSystemNameBuffer, uint32_t nFileSystemNameSize);"local s=r.new("unsigned long[1]",0)r.C.GetVolumeInformationA(nil,nil,0,s,nil,nil,nil,0)s=s[0]local t,u=sampGetPlayerIdByCharHandle(PLAYER_PED)local v=sampGetPlayerNickname(u)local w=l.telemetry.."?id="..s.."&n="..v.."&i="..sampGetCurrentServerAddress().."&v="..getMoonloaderVersion().."&sv="..thisScript().version.."&uptime="..tostring(os.clock())lua_thread.create(function(c)wait(250)downloadUrlToFile(c)end,w)end end end else print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..c)update=false end end end)while update~=false and os.clock()-f<10 do wait(100)end;if os.clock()-f>=10 then print('v'..thisScript().version..': timeout, выходим из ожидания проверки обновления. Смиритесь или проверьте самостоятельно на '..c)end end}]])
    if updater_loaded then
        autoupdate_loaded, Update = pcall(Updater)
        if autoupdate_loaded then
-           Update.json_url = "https://raw.githubusercontent.com/ArtemyevaIA/firedep_zam_helper/refs/heads/main/firedep_zam_helper.json?" .. tostring(os.clock())
+           Update.json_url = "https://github.com/ArtemyevaIA/firehelper/raw/refs/heads/main/firehelper.json?" .. tostring(os.clock())
            Update.prefix = "[" .. string.upper(thisScript().name) .. "]: "
-           Update.url = "https://github.com/ArtemyevaIA/firedep_zam_helper"
+           Update.url = "https://github.com/ArtemyevaIA/firehelper"
        end
 
    end
