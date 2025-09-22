@@ -263,10 +263,8 @@ function main()
             -- Список изменений в версии ------------------------------------------------------
             -----------------------------------------------------------------------------------
             if button == 1 and list == 7 then
-                logo = 'Отправить письмо разработчику'
-                report = 'Если вы нашли какой-то баг или у Ваас есть предложение, напишите его здесь.'
-                timestampt = os.date('%d.%m.%Y %H:%M:%S')
-                report(logo, report)
+                local timestampt = os.date('%d.%m.%Y %H:%M:%S')
+                report()
 
                 while sampIsDialogActive(3001) do wait(100) end
                 local result, button, _, input = sampHasDialogRespond(3001)
@@ -313,8 +311,8 @@ function idtlg()
     sampShowDialog(3000, "{FFA500}Подключение PAYDAY в телегу", "{7ce9b1}Введите свой id телеграмм.\nКаждый PAYDAY Вам будет приходить статистика заработка.\n\nПосле того, как Вы укажете свой id, \nнапишите что-нибудь боту {FFA500}@longamesbot {7ce9b1}в телеграмме для активации.", "Ввести", "Отмена", 1)
 end
 
-function report(logo, report)
-    sampShowDialog(3001, logo, report, "Отправить", "Отмена", 1)
+function report()
+    sampShowDialog(3001, '{FFA500}Отправить письмо разработчику', 'Если вы нашли какой-то баг или у Вас есть предложение, напишите его здесь.', "Отправить", "Отмена", 1)
 end
 
 function trst(name)
