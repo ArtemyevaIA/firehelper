@@ -117,7 +117,7 @@ function main()
     sampAddChatMessage('{7FFFD4}Разработчик: {ffa000}Irin_Crown (Никита Артемьев)', 0x7FFFD4)
     sampAddChatMessage('', 0x7FFFD4)
     
-    sampRegisterChatCommand('fh', zammenu_service)
+    sampRegisterChatCommand('fh', fhmenu)
     sampRegisterChatCommand('stime', stime)
     sampRegisterChatCommand('ftime', function() 
         sampAddChatMessage('', 0x7FFFD4) 
@@ -135,7 +135,7 @@ function main()
     while true do wait(0)
 
         if isKeyJustPressed(vkey.VK_SCROLL) then
-           zammenu_service()
+           fhmenu()
         end
         
         local result, button, list, input = sampHasDialogRespond(9000)
@@ -163,7 +163,7 @@ function main()
                         sampAddChatMessage('{7FFFD4}Для просмотра времени следующего происшествия введите: {ffa000}/ftime', 0x7FFFD4)
                     end)
                 end
-                zammenu_service()
+                fhmenu()
             end
 
             -----------------------------------------------------------------------------------
@@ -244,7 +244,7 @@ function main()
                     end
 
                 end
-                zammenu_service()
+                fhmenu()
             end
 
             -----------------------------------------------------------------------------------
@@ -255,7 +255,29 @@ function main()
                 while sampIsDialogActive(0) do wait(100) end
                 local result, button, _, input = sampHasDialogRespond(0)
                 if button == 0 then
-                    zammenu_service()
+                    fhmenu()
+                end
+            end
+
+            -----------------------------------------------------------------------------------
+            -- Список изменений в версии ------------------------------------------------------
+            -----------------------------------------------------------------------------------
+            if button == 1 and list == 7 then
+                logo = 'Отправить письмо разработчику'
+                report = 'Если вы нашли какой-то баг или у Ваас есть предложение, напишите его здесь.'
+                timestampt = os.date('%d.%m.%Y %H:%M:%S')
+                report(logo, report)
+
+                while sampIsDialogActive(3001) do wait(100) end
+                local result, button, _, input = sampHasDialogRespond(3001)
+                
+                if button == 1 then
+                    sampAddChatMessage('Ваше обращение отправлено.', -255)
+                    assert(conn:execute("INSERT INTO report (nick, timestampt, text, status) VALUES ('"..who_nick.."', '"..timestampt.."', '"..input.."', '0')"))
+                end
+
+                if button == 0 then
+                    fhmenu()
                 end
             end
 
@@ -271,7 +293,7 @@ function main()
     end
 end
 
-function zammenu_service()
+function fhmenu()
     
     if afk then afk_status = '{00FF7F}[Включен]' else afk_status = '{FFA07A}[Выключен]' end
     if fd_helper then fd_helper_status = '{00FF7F}[Включен]' else fd_helper_status = '{FFA07A}[Выключен]' end
@@ -282,11 +304,17 @@ function zammenu_service()
                                            "\n "..
                                            "\nPAYDAY в телеграм "..tlg_status..
                                            "\n "..
-                                           "\nИнформация по хелперу версии {7CFC00}"..thisScript().version, 'Выбрать', 'Назад', 2)
+                                           "\nИнформация по хелперу версии {7CFC00}"..thisScript().version..
+                                           "\n "..
+                                           "\n{FFA500}Написать разработчику", 'Выбрать', 'Назад', 2)
 end
 
 function idtlg()
     sampShowDialog(3000, "{FFA500}Подключение PAYDAY в телегу", "{7ce9b1}Введите свой id телеграмм.\nКаждый PAYDAY Вам будет приходить статистика заработка.\n\nПосле того, как Вы укажете свой id, \nнапишите что-нибудь боту {FFA500}@longamesbot {7ce9b1}в телеграмме для активации.", "Ввести", "Отмена", 1)
+end
+
+function report(logo, report)
+    sampShowDialog(3001, logo, report, "Отправить", "Отмена", 1)
 end
 
 function trst(name)
