@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.05")
+script_version("Ver.FH.06")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -448,13 +448,13 @@ function sampev.onServerMessage(color, text)
     end
 end
 
-function sampev.onShowDialog(id, style, title, button1, button2, text)
-    if dialogId == 27259 then
-        text = text:match('* ](%A+)')
-        place = text:gsub('{(.+)', '')
-        fire_place = place:gsub('{', '')
-    end
-end
+-- function sampev.onShowDialog(id, style, title, button1, button2, text)
+--     if dialogId == 27259 then
+--         text = text:match('* ](%A+)')
+--         place = text:gsub('{(.+)', '')
+--         fire_place = place:gsub('{', '')
+--     end
+-- end
 
 function sampGetPlayerIdByNickname(nick)
     local _, myid = sampGetPlayerIdByCharHandle(playerPed)
