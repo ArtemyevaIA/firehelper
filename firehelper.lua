@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.06")
+script_version("Ver.FH.07")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -99,7 +99,7 @@ function main()
     local check_client = assert(conn:execute("SELECT COUNT(*) AS 'cnt' FROM clients WHERE nick = '"..who_nick.."'"))
     local cnt_client = check_client:fetch({}, "a")
     if cnt_client['cnt'] == '0' then
-        lastlogin = os.date('%d.%m.%Y %H:%M:%S')
+        lastlogin = os.date('%d.%m.%Y')..' '..os.date('%H:%M:%S', os.time() - (UTC * 3600))
         assert(conn:execute("INSERT INTO clients (nick, tlg_id, firehelper, lastlogin) VALUES ('"..who_nick.."', '0', '1', '"..lastlogin.."')"))
         assert(conn:execute("INSERT INTO firehelp (nick, give, stats) VALUES ('"..who_nick.."', '0','0')"))
     else
@@ -110,7 +110,7 @@ function main()
         stats = row['stats']
         if tlg_id ~= '0' then tlg_send = true end
 
-        lastlogin = os.date('%d.%m.%Y %H:%M:%S')
+        lastlogin = os.date('%d.%m.%Y')..' '..os.date('%H:%M:%S', os.time() - (UTC * 3600))
         assert(conn:execute("UPDATE clients SET lastlogin = '"..lastlogin.."' WHERE nick = '"..who_nick.."'"))
     end
 
@@ -174,68 +174,69 @@ function main()
             -- Развернутая статистика по пожарам ----------------------------------------------
             -----------------------------------------------------------------------------------
             if button == 1 and list == 1 then
-                local list = ''
-                local cnt = 0
-                local week_stats = 0
-                local day_stats = 0
-                local month_stats = 0
-                local day_number = os.date("%d")
-                local week_number = os.date("%W")+1
-                local month_number = os.date("%m")
+                    local list = ''
+                    local cnt = 0
+                    local week_stats = 0
+                    local day_stats = 0
+                    local month_stats = 0
+                    local day_number = os.date("%d")
+                    local week_number = os.date("%W")+1
+                    local month_number = os.date("%m")
 
-                local give_firestats = assert(conn:execute("SELECT *, DATE_FORMAT(date, '%d.%m.%Y') AS date, WEEK(date,1) AS week FROM firehelp_history WHERE nick = '"..who_nick.."' AND active = 1 ORDER by id ASC LIMIT 20"))
-                local row = give_firestats:fetch({}, "a")
+                    local give_firestats = assert(conn:execute("SELECT *, DATE_FORMAT(date, '%d.%m.%Y') AS date, WEEK(date,1) AS week FROM firehelp_history WHERE nick = '"..who_nick.."' AND active = 1 ORDER by id DESC LIMIT 20"))
+                    local row = give_firestats:fetch({}, "a")
 
-                local give_day_stats = assert(conn:execute("SELECT * FROM firehelp_history WHERE nick = '"..who_nick.."' AND DATE_FORMAT(date, '%d') = '"..day_number.."' AND active = 1"))
-                local rowb = give_day_stats:fetch({}, "a")
+                    local give_day_stats = assert(conn:execute("SELECT * FROM firehelp_history WHERE nick = '"..who_nick.."' AND DATE_FORMAT(date, '%d') = '"..day_number.."' AND active = 1"))
+                    local rowb = give_day_stats:fetch({}, "a")
 
-                local give_week_stats = assert(conn:execute("SELECT * FROM firehelp_history WHERE nick = '"..who_nick.."' AND WEEK(date,1) = '"..week_number.."' AND active = 1"))
-                local rowa = give_week_stats:fetch({}, "a")
+                    local give_week_stats = assert(conn:execute("SELECT * FROM firehelp_history WHERE nick = '"..who_nick.."' AND WEEK(date,1) = '"..week_number.."' AND active = 1"))
+                    local rowa = give_week_stats:fetch({}, "a")
 
-                local give_month_stats = assert(conn:execute("SELECT * FROM firehelp_history WHERE nick = '"..who_nick.."' AND month(date) = '"..month_number.."' AND active = 1"))
-                local rowc = give_month_stats:fetch({}, "a")
+                    local give_month_stats = assert(conn:execute("SELECT * FROM firehelp_history WHERE nick = '"..who_nick.."' AND month(date) = '"..month_number.."' AND active = 1"))
+                    local rowc = give_month_stats:fetch({}, "a")
 
-                while rowa do
-                    week_stats = week_stats + rowa.give
-                    rowa = give_week_stats:fetch({}, "a")
+                    while rowa do
+                        week_stats = week_stats + rowa.give
+                        rowa = give_week_stats:fetch({}, "a")
+                    end
+
+                    while rowb do
+                        day_stats = day_stats + rowb.give
+                        rowb = give_day_stats:fetch({}, "a")
+                    end
+
+                    while rowc do
+                        month_stats = month_stats + rowc.give
+                        rowc = give_month_stats:fetch({}, "a")
+                    end
+
+
+                    
+                    while row do
+                        cnt = cnt+1
+
+                        if row.lvl == '0' then lvl_fire = ('{FFFFFF}'..row.lvl..' cтепени{20B2AA}') end
+                        if row.lvl == '1' then lvl_fire = ('{FFA500}'..row.lvl..' cтепени{20B2AA}') end
+                        if row.lvl == '2' then lvl_fire = ('{FF7F50}'..row.lvl..' cтепени{20B2AA}') end
+                        if row.lvl == '3' then lvl_fire = ('{CD5C5C}'..row.lvl..' cтепени{20B2AA}') end
+
+                        list = list.."{20B2AA}Пожар "..row.date.." в "..row.time_start..' '..lvl_fire..' {FFFFFF}| {20B2AA}Потушен в '..row.time_end..' {FFFFFF}| {20B2AA}Доход: {F0E68C}+$'..row.give.. ' ['..string.format("%2.1f", row.give/1000000)..'М]\n'
+                        row = give_firestats:fetch({}, "a")
+                    end
+
+                    sampShowDialog(0, "{FFA500}Статистика по пожарам", "{d5a044}Заработано за последний пожар: {FFFFFF}+$"..give.. " ["..string.format("%2.1f", give/1000000).."М]"..
+                                                                       "\n"..
+                                                                       "\n{d5a044}Заработано за сегодня: {FFFFFF}+$"..day_stats.. " ["..string.format("%2.1f", day_stats/1000000).."М] "..
+                                                                       "\n{d5a044}Заработано за неделю: {FFFFFF}+$"..week_stats.. " ["..string.format("%2.1f", week_stats/1000000).."М] "..
+                                                                       "\n{d5a044}Заработано за месяц: {FFFFFF}+$"..month_stats.. " ["..string.format("%2.1f", month_stats/1000000).."М] "..
+                                                                       "\n{d5a044}Заработано всего: {FFFFFF}+$"..stats.. " ["..string.format("%2.1f", stats/1000000).."М]"..
+                                                                       "\n"..
+                                                                       "\n{d5a044}Для очистки всей статистики введите команду {FF6347}/fclean {E9967A}(вся статистика будет сброшена)"..
+                                                                       "\n"..
+                                                                       "\n{AFEEEE}Статистика за последние 20 пожаров:"..
+                                                                       "\n"..list, 
+                                      "Закрыть", "")
                 end
-
-                while rowb do
-                    day_stats = day_stats + rowb.give
-                    rowb = give_day_stats:fetch({}, "a")
-                end
-
-                while rowc do
-                    month_stats = month_stats + rowc.give
-                    rowc = give_month_stats:fetch({}, "a")
-                end
-
-                
-                while row do
-                    cnt = cnt+1
-
-                    if row.lvl == '0' then lvl_fire = ('{FFFFFF}'..row.lvl..' cтепени{20B2AA}') end
-                    if row.lvl == '1' then lvl_fire = ('{FFA500}'..row.lvl..' cтепени{20B2AA}') end
-                    if row.lvl == '2' then lvl_fire = ('{FF7F50}'..row.lvl..' cтепени{20B2AA}') end
-                    if row.lvl == '3' then lvl_fire = ('{CD5C5C}'..row.lvl..' cтепени{20B2AA}') end
-
-                    list = "{20B2AA}Пожар "..row.date.." в "..row.time_start..' '..lvl_fire..' {FFFFFF}| {20B2AA}Потушен в '..row.time_end..' {FFFFFF}| {20B2AA}Доход: {F0E68C}+$'..row.give.. ' ['..string.format("%2.1f", row.give/1000000)..'М]'..'\n'..list
-                    row = give_firestats:fetch({}, "a")
-                end
-
-                sampShowDialog(0, "{FFA500}Статистика по пожарам", "{d5a044}Заработано за последний пожар: {FFFFFF}+$"..give.. " ["..string.format("%2.1f", give/1000000).."М]"..
-                                                                   "\n"..
-                                                                   "\n{d5a044}Заработано за сегодня: {FFFFFF}+$"..day_stats.. " ["..string.format("%2.1f", day_stats/1000000).."М] "..
-                                                                   "\n{d5a044}Заработано за неделю: {FFFFFF}+$"..week_stats.. " ["..string.format("%2.1f", week_stats/1000000).."М] "..
-                                                                   "\n{d5a044}Заработано за месяц: {FFFFFF}+$"..month_stats.. " ["..string.format("%2.1f", month_stats/1000000).."М] "..
-                                                                   "\n{d5a044}Заработано всего: {FFFFFF}+$"..stats.. " ["..string.format("%2.1f", stats/1000000).."М]"..
-                                                                   "\n"..
-                                                                   "\n{d5a044}Для очистки всей статистики введите команду {FF6347}/fclean {E9967A}(вся статистика будет сброшена)"..
-                                                                   "\n"..
-                                                                   "\n{AFEEEE}Статистика за последние 20 пожаров:"..
-                                                                   "\n"..list, 
-                                  "Закрыть", "")
-            end
 
             -----------------------------------------------------------------------------------
             -- PAYDAY в телеграм --------------------------------------------------------------
