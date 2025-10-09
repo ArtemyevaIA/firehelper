@@ -1,5 +1,5 @@
 script_name("firedep_zam_helper")
-script_version("Ver.FH.5")
+script_version("Ver.FH.6")
 
 local mysql                         = require "luasql.mysql"
 local env                           = assert(mysql.mysql())
@@ -454,7 +454,7 @@ function sampev.onShowDialog(dialogId, style, title, button1, button2, text)
     end
 
     if pay_week and dialogId == 41 and title:find("Введите сумму") then
-        lua_thread.create(function()
+        lua_thread.create(function() wait(100)
             sampSendDialogResponse(dialogId, 1, 0, '30000000')
             sampCloseCurrentDialogWithButton(1)
             lastpay = os.date('%d.%m.%Y')..' '..os.date('%H:%M:%S', os.time() - (UTC * 3600))
@@ -500,7 +500,7 @@ function sampev.onServerMessage(color, text)
     end
 
     if not fd_find_fire and fd_helper and text:find("В штате произошел пожар! Ранг опасности (%d+) звезды") then
-        lua_thread.create(function()
+        lua_thread.create(function() wait(100)
             fd_find_fire = true
             lvl = text:match('В штате произошел пожар! Ранг опасности (%d+) звезды')
             time_fire = os.date('%H:%M:%S', os.time() - (UTC * 3600))
@@ -524,7 +524,7 @@ function sampev.onServerMessage(color, text)
     end
 
     if text:find("Вы прибыли на место пожара") then
-        lua_thread.create(function()
+        lua_thread.create(function() wait(100)
             sampProcessChatInput('/r Докладывает '..nick_fire..': прыбыл на место происшествия.',-1)
 
             local x,y,z = getCharCoordinates(PLAYER_PED) 
@@ -542,19 +542,19 @@ function sampev.onServerMessage(color, text)
     end
 
     if text:find("Отнесите пострадавшего в палатку") then
-        lua_thread.create(function()
+        lua_thread.create(function() wait(100)
             sampProcessChatInput('/r Докладывает '..nick_fire..': оказываю помощь пострадавшему.',-1)
         end)
     end
 
     if text:find("Отлично! Вы спасли пострадавшего!") then
-        lua_thread.create(function()
+        lua_thread.create(function() wait(100)
             sampProcessChatInput('/r Докладывает '..nick_fire..': пострадавшему оказана первая помощь.',-1)
         end)
     end
 
     if text:find("Все очаги возгорания ликвидированы.") then
-        lua_thread.create(function()
+        lua_thread.create(function() wait(100)
             sampProcessChatInput('/r Докладывает '..nick_fire..': все очаги возгарания ликвидированы.',-1)
         end)
     end
